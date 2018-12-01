@@ -1,9 +1,10 @@
 package main
 
 import (
-	"day00"
+	"day01"
 )
 
-func main()  {
-	day00.ProduceSum("91212129")
+func main() {
+	day01.PartOne()
+	day01.PartTwo()
 }

@@ -8,6 +8,7 @@ import (
 func main() {
 	// day01.PartOne()
 	// day01.PartTwo()
+
 	day02.PartOne()
 	day02.PartTwo()
 }

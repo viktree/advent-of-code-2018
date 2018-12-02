@@ -23,12 +23,10 @@ func PartOne() {
 func PartTwo() {
 	linesOfFile := adventOfCode.ReadInputFile("01", "input.txt")
 
-	var IntSet map[int]bool
-	IntSet = make(map[int]bool)
-
+	IntSet := make(map[int]bool)
 	sum := 0
 
-	for true {
+	for {
 		for _, numberAsString := range linesOfFile {
 			number := utils.StrToInt(numberAsString)
 			sum += number
@@ -40,6 +38,4 @@ func PartTwo() {
 			IntSet[sum] = true
 		}
 	}
-
-	fmt.Printf("Answer: %d \n", sum)
 }

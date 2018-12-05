@@ -1,89 +1,159 @@
 package day04
 
 import (
-	"adventOfCode"
-	"strings"
-	"sort"
-	"time"
 	"fmt"
+	"os"
+	"sort"
+	"strings"
+	"time"
+
+	"adventOfCode"
 )
 
-type Event struct{
-	timestamp time.Time
+type Event struct {
+	date    time.Time
+	action  action
 	guardID int
-	action string
 }
 
-func parseEvents(rawEvent string) Event {
-	var event Event
-	var year, month, day, hr, min int
-	var rawAction string
-	fmt.Sscanf(rawEvent,
-		"[%d-%d-%d %d:%d] %s",
-		&year,
-		&month,
-		&day,
-		&hr,
-		&min,
-		&rawAction,
-	)
-	desc := strings.Split(rawEvent, "]")[1]
-	event.timestamp = time.Date(
-		year,
-		time.Month(month),
-		day,
-		hr,
-		min,
-		1,
-		1,
-		time.UTC,
-	)
-	fmt.Sscanf(desc, "  Guard #%d begins shift", &event.guardID)
-	if(event.guardID != 0){
-		event.action = "START_SHIFT"
-	} else {
-		if(rawAction == "wakes"){
-			event.action = "WAKES"
-		} else {
-			event.action = "SLEEPS"
-		}
+type action int
+
+const (
+	beginShift action = iota
+	startSleeping
+	stopSleeping
+)
+
+func parseDate(rawEvent string) time.Time {
+	var y, m, d, hr, mn int
+	n, err := fmt.Sscanf(rawEvent, "[%d-%d-%d %d:%d]", &y, &m, &d, &hr, &mn)
+	if n < 5 || err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
+		os.Exit(2)
 	}
-
-
-	return event
+	return time.Date(y, time.Month(m), d, hr, mn, 0, 0, time.UTC)
 }
 
-func PartOne()  {
-	rawEvents := adventOfCode.ReadInputFile("04", "input.txt")
+func setAction(message string) (int, action) {
+	var guardID int
+	var action action
+	n, _ := fmt.Sscanf(message, "Guard #%d begins shift", &guardID)
+	switch {
+	case n == 1:
+		action = beginShift
+	case message == "falls asleep":
+		action = startSleeping
+	case message == "wakes up":
+		action = stopSleeping
+	default:
+		fmt.Fprintf(os.Stderr, "ERROR: unknown action\n")
+		os.Exit(2)
+	}
+	return guardID, action
+}
+
+func parseEvents(rawEvent []string) []Event {
 	events := []Event{}
+	rawEvents := adventOfCode.ReadInputFile("04", "input.txt")
 
 	for _, rawEvent := range rawEvents {
-		event := parseEvents(rawEvent)
+		event := Event{guardID: -1}
+		event.date = parseDate(rawEvent)
+
+		i := strings.Index(rawEvent, "] ")
+		message := rawEvent[i+2:]
+		event.guardID, event.action = setAction(message)
 		events = append(events, event)
 	}
 
-	sort.Slice(events, func(i, j int) bool { return events[i].timestamp.Before(events[j].timestamp)})
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].date.Before(events[j].date)
+	})
 
-	var guardID int
-	var TimeMap map[int] time.Time
-	for _, event := range(events) {
-		event := *&event
-		if(event.action == "START_SHIFT"){
-			// What if multiple days?
-			TimeMap[event.guardID] = time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC)
-		} else {
-			if(event.action == "WAKES"){
+	return events
+}
 
-			} else {
+func PartOne() {
+	rawEvents := adventOfCode.ReadInputFile("04", "input.txt")
+	events := parseEvents(rawEvents)
 
+	var sleepyguard int
+	MinsSleeping := make(map[int]int)
+	var guard, minsStartSleeping int
+
+	for _, event := range events {
+		switch event.action {
+		case beginShift:
+			guard = event.guardID
+		case startSleeping:
+			minsStartSleeping = event.date.Minute()
+		case stopSleeping:
+			MinsSleeping[guard] += event.date.Minute() - minsStartSleeping
+			if MinsSleeping[guard] > MinsSleeping[sleepyguard] {
+				sleepyguard = guard
+			}
+		}
+	}
+
+	minutes := [60]int{}
+	guard = -1
+	var sleepyminute int
+
+	for _, event := range events {
+		if event.action == beginShift {
+			guard = event.guardID
+		} else if guard == sleepyguard {
+			switch event.action {
+			case startSleeping:
+				minsStartSleeping = event.date.Minute()
+			case stopSleeping:
+				for i := minsStartSleeping; i < event.date.Minute(); i++ {
+					minutes[i]++
+					if minutes[i] > minutes[sleepyminute] {
+						sleepyminute = i
+					}
+				}
 			}
 		}
 
 	}
 
+	fmt.Printf("Answer: %d\n", sleepyguard*sleepyminute)
 }
 
-func PartTwo()  {
-	return
-	fmt.Printf("Answer: %d \n", 42)
+type GuardSleepAtMinutePair struct {
+	guardID int
+	minute  int
+}
+
+func PartTwo() {
+
+	rawEvents := adventOfCode.ReadInputFile("04", "input.txt")
+	events := parseEvents(rawEvents)
+
+	GuardSleepAtMinFreq := make(map[GuardSleepAtMinutePair]int)
+	var guard, minsStartSleeping, maxFreq int
+	var bestPair GuardSleepAtMinutePair
+
+	for _, event := range events {
+		switch event.action {
+		case beginShift:
+			guard = event.guardID
+		case startSleeping:
+			minsStartSleeping = event.date.Minute()
+		case stopSleeping:
+			for i := minsStartSleeping; i < event.date.Minute(); i++ {
+				pair := GuardSleepAtMinutePair{guardID: guard, minute: i}
+				GuardSleepAtMinFreq[pair]++
+				if GuardSleepAtMinFreq[pair] > maxFreq {
+					maxFreq = GuardSleepAtMinFreq[pair]
+					bestPair = pair
+				}
+			}
+		}
+	}
+
+	answer := bestPair.guardID * bestPair.minute
+
+	fmt.Printf("Answer: %d\n", answer)
 }

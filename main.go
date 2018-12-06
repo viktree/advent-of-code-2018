@@ -4,7 +4,8 @@ import (
 	// "day01"
 	// "day02"
 	// "day03"
-	"day04"
+	// "day04"
+	"day05"
 )
 
 func main() {
@@ -18,7 +19,9 @@ func main() {
 	// day03.PartOne()
 	// day03.PartTwo()
 
-	day04.PartOne()
-	day04.PartTwo()
+	// day04.PartOne()
+	// day04.PartTwo()
 
+	day05.PartOne()
+	day05.PartTwo()
 }

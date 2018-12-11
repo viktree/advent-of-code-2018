@@ -5,10 +5,10 @@ import (
 	// "day02"
 	// "day03"
 	// "day04"
-	// "day05"
+	"day05"
 	// "day08"
 	// "day09"
-	"day10"
+	// "day10"
 )
 
 func main() {
@@ -25,12 +25,12 @@ func main() {
 	// day04.PartOne()
 	// day04.PartTwo()
 
-	// day05.PartOne()
-	// day05.PartTwo()
+	day05.PartOne()
+	day05.PartTwo()
 
 	// 	day08.PartOne()
 	// 	day08.PartTwo()
 
-	day10.PartOne()
-	day10.PartTwo()
+	// day10.PartOne()
+	// day10.PartTwo()
 }

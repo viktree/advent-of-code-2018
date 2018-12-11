@@ -3,6 +3,7 @@ package day05
 import (
 	"adventOfCode"
 	"fmt"
+	"strings"
 )
 
 func reactPolymer(polymer string) string {
@@ -35,38 +36,18 @@ func PartOne() {
 func PartTwo() {
 
 	polymer := adventOfCode.ReadInputFile("05", "input.txt")[0]
-	// polymer = "dabAcCaCBAcCcaDA"
-	numberOfBonds := make(map[string]int)
-	var newPolymer []byte
-	for i := range polymer {
-		molecule := polymer[i]
-		if len(newPolymer) == 0 {
-			newPolymer = append(newPolymer, molecule)
-		} else {
-			prevMolecule := newPolymer[len(newPolymer)-1]
-			if prevMolecule^molecule != 32 {
-				newPolymer = append(newPolymer, molecule)
-			} else {
-				newPolymer = newPolymer[0 : len(newPolymer)-1]
-				if _, ok := numberOfBonds[string(prevMolecule)]; ok {
-					numberOfBonds[string(prevMolecule)] += 2
-					numberOfBonds[string(molecule)] += 2
-
-				} else {
-					numberOfBonds[string(prevMolecule)] = 2
-					numberOfBonds[string(molecule)] = 2
-				}
-			}
-		}
-	}
-	answer := 0
-	for i := range numberOfBonds {
-		if numberOfBonds[i] > answer {
-			answer = numberOfBonds[i]
+	var newPolymer string
+	minLen := len(polymer)
+	for _, letter := range "abcdefghijklmnopqrstuvwxwz" {
+		newPolymer = strings.Replace(polymer, string(letter), "", -1)
+		newPolymer = strings.Replace(newPolymer, strings.ToUpper(string(letter)), "", -1)
+		newPolymer = reactPolymer(newPolymer)
+		if len(newPolymer) < minLen {
+			minLen = len(newPolymer)
 		}
 	}
 
-	fmt.Printf("Answer: %d \n", answer)
+	fmt.Printf("Answer: %d \n", minLen)
 
 	return
 }
